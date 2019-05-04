@@ -93,6 +93,14 @@ module Pod
         # Perform search index update operation in background.
         update_search_index_if_needed_in_background(changed_spec_paths)
       end
+
+      # Adds the provided source to the list of sources
+      #
+      # @param [Source] source the source to add
+      #
+      def add_source(source)
+        all << source
+      end
     end
 
     extend Executable

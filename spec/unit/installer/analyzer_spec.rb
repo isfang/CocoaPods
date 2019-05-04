@@ -128,6 +128,40 @@ module Pod
         analyzer.update_repositories
       end
 
+      it 'registers plugin sources with the sources manager' do
+        podfile = Podfile.new do
+          source 'https://github.com/cocoapods/specs'
+          pod 'BananaLib', '1.0'
+          pod 'JSONKit'
+          pod 'PrivatePod'
+        end
+
+        spec = Pod::Specification.new do |s|
+          s.name = 'PrivatePod'
+          s.version = '1.0.0'
+          s.source_files = '**/*.swift'
+        end
+
+        tmp_repo_dir = SpecHelper.temporary_directory + 'my-specs'
+        tmp_repo_dir.mkpath
+
+        plugin_source = Pod::Source.new(tmp_repo_dir)
+        plugin_source.stubs(:all_specs).returns([spec])
+        plugin_source.stubs(:url).returns('protocol://special-source.org/my-specs')
+
+        config.sources_manager.stubs(:source_from_path).returns(plugin_source)
+
+        analyzer = Pod::Installer::Analyzer.new(config.sandbox, podfile, nil, [plugin_source])
+        analyzer.send(:sources)
+
+        dependency = Pod::Dependency.new('PrivatePod', '1.0.0', :source => 'protocol://special-source.org/my-specs')
+
+        result = config.sources_manager.aggregate_for_dependency(dependency)
+        result.sources.should == [plugin_source]
+
+        FileUtils.rm_rf(tmp_repo_dir)
+      end
+
       #--------------------------------------#
 
       it 'generates the model to represent the target definitions' do

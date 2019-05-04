@@ -170,6 +170,9 @@ module Pod
           end
           unless plugin_sources.empty?
             result.insert(0, *plugin_sources)
+            plugin_sources.each do |source|
+              config.sources_manager.add_source(source)
+            end
           end
           result
         end
