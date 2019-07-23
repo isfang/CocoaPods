@@ -1052,7 +1052,17 @@ module Pod
       end
 
       begin
-        _xcodebuild(command, true)
+        puts '********build with a amended xcpretty **********'
+        is_build = command[1] == 'build'
+        if is_build
+          command_single = command[2, command.size - 2]
+          target_command_single = command_single.join ' '
+          system "xcodebuild clean #{target_command_single}"
+          system "xcodebuild build #{target_command_single} |xcpretty"
+        else
+          _xcodebuild(command, true)
+        end
+        puts '******************'
       rescue => e
         message = 'Returned an unsuccessful exit code.'
         message += ' You can use `--verbose` for more information.' unless config.verbose?
