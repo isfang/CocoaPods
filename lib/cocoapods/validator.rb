@@ -1050,25 +1050,29 @@ module Pod
       if analyze
         command += %w(CLANG_ANALYZER_OUTPUT=html CLANG_ANALYZER_OUTPUT_DIR=analyzer)
       end
-
+      
+      build_result = ''
       begin
-        puts '********build with a amended xcpretty **********'
+        puts '********build with a amended xcpretty**********'
         is_build = command[1] == 'build'
         if is_build
           command_single = command[2, command.size - 2]
           target_command_single = command_single.join ' '
           system "xcodebuild clean #{target_command_single}"
-          system "xcodebuild build #{target_command_single} |xcpretty"
+          build_result = `xcodebuild build #{target_command_single} |xcpretty`
+          puts "#{build_result}"
+          raise 'Build Failed' unless build_result.include? 'Build Succeeded'
         else
-          _xcodebuild(command, true)
+          build_result = _xcodebuild(command, true)
         end
-        puts '******************'
+        build_result
       rescue => e
         message = 'Returned an unsuccessful exit code.'
         message += ' You can use `--verbose` for more information.' unless config.verbose?
         error('xcodebuild', message)
         e.message
       end
+      
     end
 
     # Executes the given command in the current working directory.
